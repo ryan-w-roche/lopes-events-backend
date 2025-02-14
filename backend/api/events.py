@@ -56,6 +56,7 @@ async def get_events(db = Depends(get_db)):
 async def create_event(event: EventModel, db = Depends(get_db)):
     try:
         events_collection = db["events"]
+        print(event.dict())
 
         # Insert the event into the collection
         result = await events_collection.insert_one(event.dict())
