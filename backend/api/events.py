@@ -2,7 +2,7 @@ from backend.core.database import Database
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from bson.objectid import ObjectId
-from typing import Optional
+from typing import Optional, List
 
 router = APIRouter()
 
@@ -10,14 +10,14 @@ router = APIRouter()
 class EventModel(BaseModel):
     title: str
     description: Optional[str] = None
-    date: str  # e.g., "2025-02-05"
-    time: str  # e.g., "10:30"
+    organizer: str
+    free: bool
     location: str
-    category: Optional[str] = None
-    image_url: Optional[str] = None
+    maxPeople: int
+    postDate: str
+    rangeDate: List[str]
+    adultOnly: bool
 
-class EventResponseModel(EventModel):
-    id: str = Field(..., alias="_id")
 
 # Utility to handle database lifecycle
 async def get_db():
@@ -52,11 +52,11 @@ async def get_events(db = Depends(get_db)):
         )
 
 # Create event
-@router.post("/event", response_model=EventResponseModel)
+@router.post("/event")
 async def create_event(event: EventModel, db = Depends(get_db)):
     try:
         events_collection = db["events"]
-        print(event.dict())
+        print(event.model_dump())
 
         # Insert the event into the collection
         result = await events_collection.insert_one(event.dict())
@@ -68,7 +68,7 @@ async def create_event(event: EventModel, db = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 # Get single event
-@router.get("/event/{event_id}", response_model=EventResponseModel)
+@router.get("/event/{event_id}")
 async def get_event(event_id: str, db = Depends(get_db)):
     try:
         events_collection = db["events"]
@@ -83,7 +83,7 @@ async def get_event(event_id: str, db = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     
 # Update event
-@router.put("/event/{event_id}", response_model=EventResponseModel)
+@router.put("/event/{event_id}")
 async def update_event(event_id: str, event: EventModel, db = Depends(get_db)):
     try:
         events_collection = db["events"]
