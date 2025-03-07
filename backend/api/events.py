@@ -6,7 +6,7 @@ from typing import Optional, List
 
 router = APIRouter()
 
-# Pydantic model for Event
+# Pydantic model for Event creation and updating
 class EventModel(BaseModel):
     title: str
     description: Optional[str] = None
@@ -18,6 +18,9 @@ class EventModel(BaseModel):
     rangeDate: List[str]
     adultOnly: bool
 
+# Pydantic model for Event deletion
+class EventDelete(BaseModel):
+    id: str
 
 # Utility to handle database lifecycle
 async def get_db():
@@ -101,16 +104,16 @@ async def update_event(event_id: str, event: EventModel, db = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 # Delete event
-@router.delete("/event/{event_id}")
-async def delete_event(event_id: str, db = Depends(get_db)):
+@router.delete("/delete")
+async def delete_event(delete_data: EventDelete, db = Depends(get_db)):
     try:
         events_collection = db["events"]
 
         # Delete the event
-        result = await events_collection.delete_one({"_id": ObjectId(event_id)})
+        result = await events_collection.delete_one({"_id": ObjectId(delete_data.id)})
         if result.deleted_count:
             return {"message": "Event successfully deleted"}
         else:
             raise HTTPException(status_code=404, detail="Event not found")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
