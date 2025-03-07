@@ -104,13 +104,13 @@ async def update_event(event_id: str, event: EventModel, db = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 # Delete event
-@router.delete("/delete")
-async def delete_event(delete_data: EventDelete, db = Depends(get_db)):
+@router.delete("/delete/{event_id}")
+async def delete_event(event_id: str, db = Depends(get_db)):
     try:
         events_collection = db["events"]
 
         # Delete the event
-        result = await events_collection.delete_one({"_id": ObjectId(delete_data.id)})
+        result = await events_collection.delete_one({"_id": ObjectId(event_id)})
         if result.deleted_count:
             return {"message": "Event successfully deleted"}
         else:
